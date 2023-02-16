@@ -25,6 +25,7 @@ public interface Application {
 
         @Override
         public void run(String[] args) {
+            // TODO: handle custom argument parsing when running as one-shot
             ExecutableResult result = executable.execute(args);
 
             if (result instanceof ExecutableResult.Failure) {
