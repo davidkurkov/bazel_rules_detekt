@@ -3,15 +3,22 @@ package io.buildfoundation.bazel.detekt.execute;
 import io.buildfoundation.bazel.detekt.value.WorkRequest;
 import io.buildfoundation.bazel.detekt.value.WorkResponse;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+/**
+ * WorkerExecutable interface representing a worker task.
+ */
 public interface WorkerExecutable {
-
     WorkResponse execute(WorkRequest request);
 
     final class Impl implements WorkerExecutable {
-
         private final Executable executable;
 
         public Impl(Executable executable) {
@@ -21,24 +28,31 @@ public interface WorkerExecutable {
         @Override
         public WorkResponse execute(WorkRequest request) {
             boolean shouldRunAsTestTarget = request.arguments.contains("--run-as-test-target");
+
+            // Extract the output path of the execution result from the arguments
             String executionResultOutputPath = getExecutionResultOutputPath(request.arguments);
 
+            // Sanitize the Detekt arguments
             List<String> detektArgs = sanitizeDetektArguments(request.arguments);
 
-            ExecutableResult result = executable.execute(detektArgs.toArray(new String[0]));
+            // Execute detekt
+            ExecutableResult executableResult = executable.execute(detektArgs.toArray(new String[0]));
 
-            WorkResponse response = new WorkResponse();
-            response.requestId = request.requestId;
-            response.output = result.output();
-            response.exitCode = result.statusCode();
+            // Prepare the worker response
+            WorkResponse workResponse = new WorkResponse();
+            workResponse.requestId = request.requestId;
+            workResponse.output = executableResult.output();
+            workResponse.exitCode = executableResult.statusCode();
 
-            writeExecutionResultToFile(response.exitCode, executionResultOutputPath);
+            // Write the execution result to a file
+            writeExecutionResultToFile(workResponse.exitCode, executionResultOutputPath);
 
+            // Force the exit code to be 0 if detekt is run as a test target
             if (shouldRunAsTestTarget) {
-                response.exitCode = 0;
+                workResponse.exitCode = 0;
             }
 
-            return response;
+            return workResponse;
         }
 
         /**
@@ -53,9 +67,12 @@ public interface WorkerExecutable {
             }
         }
 
+        /**
+         * Sanitizes the Detekt arguments by excluding certain arguments.
+         */
         private static List<String> sanitizeDetektArguments(List<String> inputArgs) {
-            Set<String> excludeArgs = new HashSet<>(Arrays.asList("--execution-result", "--run-as-test-target"));
-            return filterOutArgValuePairs(inputArgs, excludeArgs);
+            Set<String> excludedArgs = new HashSet<>(Arrays.asList("--execution-result", "--run-as-test-target"));
+            return filterOutArgValuePairs(inputArgs, excludedArgs);
         }
 
         /**

@@ -172,7 +172,7 @@ detekt_test = rule(
 
 def detekt_test_target(name, srcs, **kwargs):
     detekt_test(
-        name = name + "_detekt_test",
+        name = name,
         srcs = srcs,
         **kwargs
     )
