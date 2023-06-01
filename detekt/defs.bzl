@@ -58,14 +58,7 @@ _ATTRS = {
     ),
 }
 
-def _get_default_attributes(is_test_target):
-    _ATTRS["test_target"] = attr.bool(
-        default = is_test_target,
-        doc = "Raise failure as part of test execution.",
-    )
-    return _ATTRS
-
-def _impl(ctx):
+def _impl(ctx, run_as_test_target):
     action_inputs = []
     action_outputs = []
 
@@ -125,7 +118,7 @@ def _impl(ctx):
     if ctx.attr.parallel:
         detekt_arguments.add("--parallel")
 
-    if ctx.attr.test_target:
+    if run_as_test_target:
         detekt_arguments.add("--run-as-test-target")
 
     action_inputs.extend(ctx.files.plugins)
@@ -155,24 +148,23 @@ def _impl(ctx):
         ),
     ]
 
+def _detekt_impl(ctx):
+    return _impl(ctx = ctx, run_as_test_target = False)
+
+def _detekt_test_impl(ctx):
+    return _impl(ctx = ctx, run_as_test_target = True)
+
 detekt = rule(
-    implementation = _impl,
-    attrs = _get_default_attributes(is_test_target = False),
+    implementation = _detekt_impl,
+    attrs = _ATTRS,
     provides = [DefaultInfo],
     toolchains = ["@rules_detekt//detekt:toolchain_type"],
 )
 
 detekt_test = rule(
-    implementation = _impl,
-    attrs = _get_default_attributes(is_test_target = True),
+    implementation = _detekt_test_impl,
+    attrs = _ATTRS,
     provides = [DefaultInfo],
     toolchains = ["@rules_detekt//detekt:toolchain_type"],
     test = True,
 )
-
-def detekt_test_target(name, srcs, **kwargs):
-    detekt_test(
-        name = name,
-        srcs = srcs,
-        **kwargs
-    )
