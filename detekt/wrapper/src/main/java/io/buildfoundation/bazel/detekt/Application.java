@@ -30,6 +30,7 @@ public interface Application {
         public void run(String[] args) {
             List<String> rawArgs = Arrays.asList(args);
 
+            // Extract detekt-arguments from params-file if that's being used
             String paramsFilePath = (args.length == 1 && args[0].startsWith("@") && args[0].endsWith(".params")) ? args[0].substring(1) : "";
             if (!paramsFilePath.isEmpty()) {
                 rawArgs = ExecutionUtils.readArgumentsFromFile(paramsFilePath);
@@ -50,8 +51,10 @@ public interface Application {
 
             ExecutableResult result;
             if (!paramsFilePath.isEmpty()) {
+                // Execute detekt using the modified params-file if that's how arguments were being passed in
                 result = executable.execute(args);
             } else {
+                // Execute with detekt-arguments passed-in directly
                 result = executable.execute(detektArgs.toArray(new String[0]));
             }
 
@@ -61,7 +64,7 @@ public interface Application {
                 streams.error().println(result.output());
             }
 
-            // Write the execution result to a file
+            // Write the exit code to a file
             ExecutionUtils.writeExecutionResultToFile(statusCode, executionResultOutputPath);
 
             // Force the exit code to be 0 if detekt is run as a test target
@@ -87,7 +90,6 @@ public interface Application {
 
         @Override
         public void run(String[] args) {
-            // something
             streams.request()
                 .subscribeOn(scheduler)
                 .parallel()

@@ -44,10 +44,9 @@ public class ExecutionUtils {
     }
 
     /**
-     * Reads in arguments from a params file
+     * Read-in arguments from a params-file
      */
     public static List<String> readArgumentsFromFile(String filePath) {
-        // TODO: something
         try {
             Path path = Paths.get(filePath);
             return Files.readAllLines(path);
@@ -59,7 +58,7 @@ public class ExecutionUtils {
     }
 
     /**
-     * Write arguments to a params file
+     * Write arguments to a params-file
      */
     public static void writeArgumentsToFile(List<String> arguments, String filePath) {
         try {

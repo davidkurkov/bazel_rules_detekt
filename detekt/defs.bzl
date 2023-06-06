@@ -94,7 +94,7 @@ def _impl(ctx, run_as_test_target):
         action_outputs.append(html_report)
         detekt_arguments.add("--report", "html:{}".format(html_report.path))
 
-    if ctx.attr._txt_report or ctx.attr.test_target:
+    if ctx.attr._txt_report or run_as_test_target:
         txt_report = ctx.actions.declare_file("{}_detekt_report.txt".format(ctx.label.name))
 
         action_outputs.append(txt_report)
