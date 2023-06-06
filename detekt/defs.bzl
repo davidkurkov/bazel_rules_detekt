@@ -124,7 +124,7 @@ def _impl(ctx, run_as_test_target):
     action_inputs.extend(ctx.files.plugins)
     detekt_arguments.add_joined("--plugins", ctx.files.plugins, join_with = ",")
 
-    execution_result = ctx.actions.declare_file("{}_exit_code.sh".format(ctx.label.name))
+    execution_result = ctx.actions.declare_file("{}_exit_code.txt".format(ctx.label.name))
     action_outputs.append(execution_result)
     detekt_arguments.add("--execution-result", "{}".format(execution_result.path))
 
@@ -141,10 +141,17 @@ def _impl(ctx, run_as_test_target):
         arguments = [java_arguments, detekt_arguments],
     )
 
+    final_result = ctx.actions.declare_file(ctx.attr.name + ".sh")
+    ctx.actions.run_shell(
+        inputs = [execution_result],
+        outputs = [final_result],
+        command = "exit_code=$(cat %s); echo -e \"#!/bin/bash\\n\\nexit $exit_code\" > %s" % (execution_result.path, final_result.path),
+    )
+
     return [
         DefaultInfo(
             files = depset(action_outputs),
-            executable = execution_result,
+            executable = final_result,
         ),
     ]
 
