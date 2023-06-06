@@ -3,6 +3,9 @@ package io.buildfoundation.bazel.detekt;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -38,6 +41,34 @@ public class ExecutionUtils {
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Reads in arguments from a params file
+     */
+    public static List<String> readArgumentsFromFile(String filePath) {
+        // TODO: something
+        try {
+            Path path = Paths.get(filePath);
+            return Files.readAllLines(path);
+        } catch (IOException e) {
+            System.err.println("An error occurred while reading the params file: " + e.getMessage());
+            System.exit(1);
+        }
+        return null;
+    }
+
+    /**
+     * Write arguments to a params file
+     */
+    public static void writeArgumentsToFile(List<String> arguments, String filePath) {
+        try {
+            Path path = Paths.get(filePath);
+            Files.write(path, arguments);
+        } catch (IOException e) {
+            System.err.println("An error occurred while writing arguments to params file: " + e.getMessage());
+            System.exit(1);
         }
     }
 

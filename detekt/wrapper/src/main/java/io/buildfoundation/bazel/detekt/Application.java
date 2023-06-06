@@ -29,6 +29,12 @@ public interface Application {
         @Override
         public void run(String[] args) {
             List<String> rawArgs = Arrays.asList(args);
+
+            String paramsFilePath = (args.length == 1 && args[0].startsWith("@") && args[0].endsWith(".params")) ? args[0].substring(1) : "";
+            if (!paramsFilePath.isEmpty()) {
+                rawArgs = ExecutionUtils.readArgumentsFromFile(paramsFilePath);
+            }
+
             boolean shouldRunAsTestTarget = ExecutionUtils.shouldRunAsTestTarget(rawArgs);
 
             // Extract the output path of the execution result from the arguments
@@ -36,7 +42,19 @@ public interface Application {
 
             // Sanitize the Detekt arguments
             List<String> detektArgs = ExecutionUtils.sanitizeDetektArguments(rawArgs);
-            ExecutableResult result = executable.execute(detektArgs.toArray(new String[0]));
+
+            if (!paramsFilePath.isEmpty()) {
+                // Write the sanitized arguments to the params-file
+                ExecutionUtils.writeArgumentsToFile(detektArgs, paramsFilePath);
+            }
+
+            ExecutableResult result;
+            if (!paramsFilePath.isEmpty()) {
+                result = executable.execute(args);
+            } else {
+                result = executable.execute(detektArgs.toArray(new String[0]));
+            }
+
             int statusCode = result.statusCode();
 
             if (result instanceof ExecutableResult.Failure) {
@@ -69,6 +87,7 @@ public interface Application {
 
         @Override
         public void run(String[] args) {
+            // something
             streams.request()
                 .subscribeOn(scheduler)
                 .parallel()
