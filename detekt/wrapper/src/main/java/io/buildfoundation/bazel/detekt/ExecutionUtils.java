@@ -39,7 +39,6 @@ public class ExecutionUtils {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(executionResultOutputPath))) {
             writer.write(String.format("#!/bin/bash\n\nexit %d\n", exitCode));
         } catch (IOException e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
