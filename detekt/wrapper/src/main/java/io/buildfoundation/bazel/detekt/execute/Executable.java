@@ -29,6 +29,7 @@ public interface Executable {
             PrintStream errorPrinter = new PrintStream(new BufferedOutputStream(errorBuffer));
 
             try {
+                // TODO: double-check OneShot & Worker call args the same way here
                 detekt.execute(args, outputPrinter, errorPrinter);
 
                 return new ExecutableResult.Success();
@@ -52,5 +53,4 @@ public interface Executable {
             }
         }
     }
-
 }

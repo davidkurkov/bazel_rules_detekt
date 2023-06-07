@@ -70,6 +70,11 @@ def _impl(ctx, run_as_test_target):
 
     detekt_arguments = ctx.actions.args()
 
+    detekt_wrapper_arguments = ctx.actions.args()
+    detekt_wrapper_arguments.set_param_file_format("multiline")
+    detekt_wrapper_arguments.use_param_file("@%s", use_always = True)
+    detekt_wrapper_arguments.add("--detekt-arguments", detekt_arguments)
+
     # Detekt arguments are passed in a file. The file path is a special @-named argument.
     # See https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html#BHCJEIBB
     # A worker execution replaces the @-argument with the "--persistent_worker" one.
@@ -119,14 +124,14 @@ def _impl(ctx, run_as_test_target):
         detekt_arguments.add("--parallel")
 
     if run_as_test_target:
-        detekt_arguments.add("--run-as-test-target")
+        detekt_wrapper_arguments.add("--run-as-test-target")
 
     action_inputs.extend(ctx.files.plugins)
     detekt_arguments.add_joined("--plugins", ctx.files.plugins, join_with = ",")
 
     execution_result = ctx.actions.declare_file("{}_exit_code.txt".format(ctx.label.name))
     action_outputs.append(execution_result)
-    detekt_arguments.add("--execution-result", "{}".format(execution_result.path))
+    detekt_wrapper_arguments.add("--execution-result", "{}".format(execution_result.path))
 
     ctx.actions.run(
         mnemonic = "Detekt",
@@ -138,7 +143,7 @@ def _impl(ctx, run_as_test_target):
             "supports-workers": "1",
             "supports-multiplex-workers": "1",
         },
-        arguments = [java_arguments, detekt_arguments],
+        arguments = [java_arguments, detekt_wrapper_arguments, detekt_arguments],
     )
 
     final_result = ctx.actions.declare_file(ctx.attr.name + ".sh")
